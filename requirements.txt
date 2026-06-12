@@ -28,3 +28,10 @@ Faker>=25.0.0
 
 # Utilities
 python-dotenv>=1.0.1            # .env file support
+
+
+
+psycopg2-binary
+python-dotenv
+
+
