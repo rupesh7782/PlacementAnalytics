@@ -18,9 +18,18 @@ st.set_page_config(
     initial_sidebar_state = "expanded",
 )
 
+# ── Initialize Session State for Navigation ────────────────────────────────────
+if "active_page" not in st.session_state:
+    st.session_state.active_page = "🏠 Home"
+
 # ── Custom CSS ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+/* 🔥 FORCE HIDE the default Streamlit sidebar navigation 🔥 */
+[data-testid="stSidebarNav"] {
+    display: none !important;
+}
+
 /* Sidebar */
 section[data-testid="stSidebar"] {
     background: linear-gradient(160deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
@@ -88,6 +97,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.divider()
 
+    # The radio button is now tied to st.session_state.active_page
     page = st.radio(
         "Navigation",
         options=[
@@ -99,6 +109,7 @@ with st.sidebar:
             "📄 Reports",
             "⚙️ Settings",
         ],
+        key="active_page",
         label_visibility="collapsed"
     )
 
@@ -126,21 +137,28 @@ if page == "🏠 Home":
         ### 📊 Analytics Dashboard
         Real-time KPIs, branch-wise statistics, company hiring trends, and skill distribution charts.
         """)
-        if st.button("Go to Dashboard →", key="b1"): st.session_state["_nav"] = "📊 Dashboard"
+        # Updated to correctly change the page via session state
+        if st.button("Go to Dashboard →", key="b1"): 
+            st.session_state.active_page = "📊 Dashboard"
+            st.rerun()
 
     with col2:
         st.markdown("""
         ### 🤖 ML Prediction
         Predict placement probability using Logistic Regression & Random Forest with skill gap insights.
         """)
-        if st.button("Try Prediction →", key="b2"): st.session_state["_nav"] = "🤖 Prediction"
+        if st.button("Try Prediction →", key="b2"): 
+            st.session_state.active_page = "🤖 Prediction"
+            st.rerun()
 
     with col3:
         st.markdown("""
         ### 📄 Reports
         Generate and download student, placement, and branch-wise reports in CSV or Excel format.
         """)
-        if st.button("View Reports →", key="b3"): st.session_state["_nav"] = "📄 Reports"
+        if st.button("View Reports →", key="b3"): 
+            st.session_state.active_page = "📄 Reports"
+            st.rerun()
 
     st.divider()
     st.markdown("#### Quick Feature Overview")
