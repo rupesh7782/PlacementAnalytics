@@ -5,8 +5,6 @@ from app.utils.data_utils import (
     delete_student, upsert_skills, upsert_placement,
     fetch_companies, df_to_csv_bytes
 )
-
-# This is the magic line that fixes the NameError:
 from database.db_connection import get_db_session, Student, Skill 
 
 BRANCHES = [
@@ -14,7 +12,7 @@ BRANCHES = [
     "Electronics & Communication", "Mechanical Engineering",
     "Civil Engineering", "Electrical Engineering",
     "Data Science", "Artificial Intelligence"
-]git --version
+]
 
 def show():
     st.title("👥 Student Management")
@@ -111,25 +109,33 @@ def show():
                        for _, r in df_all.iterrows()}
             chosen = st.selectbox("Select Student", list(options.keys()))
             student_id = options[chosen]
+            
             session = get_db_session()
             student = session.query(Student).filter_by(student_id=student_id).first()
+            
+            # Safely extract data before closing the session
+            if student:
+                s_name = student.name
+                s_email = student.email or ""
+                s_phone = student.phone or ""
+                s_branch = student.branch
+                s_cgpa = float(student.cgpa or 0)
+                s_grad_yr = int(student.graduation_year)
             session.close()
 
             if student:
                 with st.form("edit_student_form"):
                     c1, c2 = st.columns(2)
                     with c1:
-                        new_name  = st.text_input("Full Name",  value=student.name)
-                        new_email = st.text_input("Email",      value=student.email or "")
-                        new_phone = st.text_input("Phone",      value=student.phone or "")
+                        new_name  = st.text_input("Full Name",  value=s_name)
+                        new_email = st.text_input("Email",      value=s_email)
+                        new_phone = st.text_input("Phone",      value=s_phone)
                     with c2:
                         new_branch  = st.selectbox("Branch", BRANCHES,
-                                                   index=BRANCHES.index(student.branch)
-                                                   if student.branch in BRANCHES else 0)
-                        new_cgpa    = st.number_input("CGPA", 0.0, 10.0,
-                                                      float(student.cgpa or 0), 0.01)
-                        new_grad_yr = st.number_input("Graduation Year", 2020, 2030,
-                                                      int(student.graduation_year), 1)
+                                                   index=BRANCHES.index(s_branch)
+                                                   if s_branch in BRANCHES else 0)
+                        new_cgpa    = st.number_input("CGPA", 0.0, 10.0, s_cgpa, 0.01)
+                        new_grad_yr = st.number_input("Graduation Year", 2020, 2030, s_grad_yr, 1)
 
                     col_save, col_del = st.columns([3, 1])
                     with col_save:
@@ -158,35 +164,40 @@ def show():
         else:
             options = {f"{r['student_code']} – {r['name']}": r["student_id"]
                        for _, r in df_all.iterrows()}
-            chosen     = st.selectbox("Select Student", list(options.keys()),
-                                       key="skill_student")
+            chosen     = st.selectbox("Select Student", list(options.keys()), key="skill_student")
             student_id = options[chosen]
 
-            
             session = get_db_session()
             skill   = session.query(Skill).filter_by(student_id=student_id).first()
+            
+            # Safely extract skill data before closing the session
+            py_val = int(skill.python_score) if skill and skill.python_score is not None else 0
+            ja_val = int(skill.java_score) if skill and skill.java_score is not None else 0
+            sql_val = int(skill.sql_score) if skill and skill.sql_score is not None else 0
+            html_val = int(skill.html_css_score) if skill and skill.html_css_score is not None else 0
+            js_val = int(skill.javascript_score) if skill and skill.javascript_score is not None else 0
+            apt_val = float(skill.aptitude_score) if skill and skill.aptitude_score is not None else 50.0
+            comm_val = float(skill.communication_score) if skill and skill.communication_score is not None else 5.0
             session.close()
 
             with st.form("skills_form"):
                 st.markdown("**Technical Skills (0–10)**")
                 c1, c2, c3 = st.columns(3)
                 with c1:
-                    py  = st.slider("Python",     0, 10, int(skill.python_score  if skill else 0))
-                    ja  = st.slider("Java",        0, 10, int(skill.java_score    if skill else 0))
+                    py  = st.slider("Python",     0, 10, py_val)
+                    ja  = st.slider("Java",       0, 10, ja_val)
                 with c2:
-                    sql = st.slider("SQL",         0, 10, int(skill.sql_score     if skill else 0))
-                    html= st.slider("HTML/CSS",    0, 10, int(skill.html_css_score if skill else 0))
+                    sql = st.slider("SQL",        0, 10, sql_val)
+                    html= st.slider("HTML/CSS",   0, 10, html_val)
                 with c3:
-                    js  = st.slider("JavaScript",  0, 10, int(skill.javascript_score if skill else 0))
+                    js  = st.slider("JavaScript", 0, 10, js_val)
 
                 st.markdown("**Soft Skills**")
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    apt  = st.number_input("Aptitude Score (0–100)", 0.0, 100.0,
-                                           float(skill.aptitude_score if skill else 50), 0.5)
+                    apt  = st.number_input("Aptitude Score (0–100)", 0.0, 100.0, apt_val, 0.5)
                 with col_b:
-                    comm = st.number_input("Communication Score (0–10)", 0.0, 10.0,
-                                           float(skill.communication_score if skill else 5), 0.1)
+                    comm = st.number_input("Communication Score (0–10)", 0.0, 10.0, comm_val, 0.1)
 
                 if st.form_submit_button("💾 Save Skills", type="primary"):
                     ok = upsert_skills(student_id, {
