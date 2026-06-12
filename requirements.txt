@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────
+# Placement Analytics & Prediction System — Requirements
+# ─────────────────────────────────────────────────────────
+
+# Web framework
+streamlit>=1.35.0
+
+# Database
+psycopg2-binary>=2.9.9          # PostgreSQL driver
+SQLAlchemy>=2.0.30              # ORM
+
+# Data manipulation
+pandas>=2.2.2
+numpy>=1.26.4
+
+# Machine Learning
+scikit-learn>=1.4.2
+
+# Visualisation
+plotly>=5.22.0
+matplotlib>=3.9.0
+
+# Excel export
+openpyxl>=3.1.2
+
+# Fake data generation (for seeding sample data)
+Faker>=25.0.0
+
+# Utilities
+python-dotenv>=1.0.1            # .env file support
