@@ -8,19 +8,26 @@ Provides session management and base ORM model.
 import os
 from sqlalchemy import (
     create_engine, Column, Integer, String, Numeric,
-    Date, Text, DateTime, ForeignKey, CheckConstraint, UniqueConstraint
+    Date, Text, DateTime, ForeignKey
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.sql import func
 from contextlib import contextmanager
 import streamlit as st
 
+# Load environment variables if running locally (ignored by Streamlit Cloud)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # ── Connection string ──────────────────────────────────────────────────────────
-# Reads from environment variable DATABASE_URL, falls back to local default
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:rc%401710@localhost:5432/placement_db"
-)
+# Try Streamlit Cloud secrets first, fallback to local .env
+try:
+    DATABASE_URL = st.secrets["DATABASE_URL"]
+except (FileNotFoundError, KeyError):
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:rc%401710@localhost:5432/placement_db")
 
 # ── SQLAlchemy engine & session ────────────────────────────────────────────────
 engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
